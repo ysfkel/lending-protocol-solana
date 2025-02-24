@@ -16,3 +16,15 @@ pub struct Pool {
     pub liquidiation_close_factor: u64, // Percent of collateral that can be liquidated 
     pub max_ltv: u64 ,   // max percentage of collateral that can be borrowed for a specific asset
 } 
+
+impl Pool {
+    pub fn calculate_user_shares(&self, amount: u64) -> u64 {
+
+        if self.total_deposits == 0 {
+            return 0;
+        }
+        
+        let user_shares = (amount * self.total_shares) / self.total_deposits;
+        user_shares
+    }
+}

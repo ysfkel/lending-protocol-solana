@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self,Mint, TokenAccount, TokenInterface};
 
-use crate::Pool;
+use crate::{Pool, TREASURY_SEED};
 
 pub fn init_pool(ctx: Context<InitPool>, liquidation_threshold: u64, max_ltx: u64) -> Result<()> {
     let pool = &mut ctx.accounts.pool;
@@ -31,7 +31,7 @@ pub struct InitPool<'info> {
         token::mint = mint,
         token::authority = pool_token_account,
         payer = signer,
-        seeds = [b"treasury", mint.key().as_ref()],
+        seeds = [TREASURY_SEED, mint.key().as_ref()],
         bump
     )]
     pub pool_token_account: InterfaceAccount<'info, TokenAccount>, 
