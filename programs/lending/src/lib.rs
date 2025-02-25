@@ -13,10 +13,10 @@ declare_id!("8ATesfjiC98pCAJnoQWumi6F4kBpaWd4Un44bKMnDMcQ");
 pub mod lending {
     use super::*;
 
-    pub fn init_pool(ctx: Context<InitPool>,liquidation_threshold: u64, max_ltx: u64) -> Result<()> {
-        let pool_key = ctx.accounts.pool.key().clone();
-        instructions::init_pool(ctx, liquidation_threshold, max_ltx)?;
-        msg!("Pool initialized {:?}", pool_key);
+    pub fn init_reserve(ctx: Context<InitReserve>,liquidation_threshold: u64, max_ltx: u64) -> Result<()> {
+        let reserve_key = ctx.accounts.reserve.key().clone();
+        instructions::init_reserve(ctx, liquidation_threshold, max_ltx)?;
+        msg!("Reserve initialized {:?}", reserve_key);
         Ok(())
     }
 

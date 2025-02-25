@@ -2,10 +2,10 @@ use anchor_lang::prelude::*;
 
 #[account]
 #[derive(InitSpace)]
-pub struct Pool {
+pub struct Reserve {
     pub authority:Pubkey,
     pub mint: Pubkey,         // Token mint (e.g., USDC, SOL)
-    pub total_deposits: u64,  // Total deposits in the pool
+    pub total_deposits: u64,  // Total deposits in the reserve
     pub total_shares: u64,    // Total LP shares issued
     pub total_borrows: u64,
     pub last_updated: i64, 
@@ -17,7 +17,7 @@ pub struct Pool {
     pub max_ltv: u64 ,   // max percentage of collateral that can be borrowed for a specific asset
 } 
 
-impl Pool {
+impl Reserve {
     pub fn calculate_user_shares(&self, amount: u64) -> u64 {
 
         if self.total_deposits == 0 {

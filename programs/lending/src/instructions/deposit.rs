@@ -4,22 +4,22 @@ use anchor_spl::{
     token_interface::{self,Mint, TokenAccount,TokenInterface, TransferChecked}};
 
 use crate::seeds::USER_ASSET_BALANCE_SEED;
-use crate::{Pool, UserAssetBalance, TREASURY_SEED};
+use crate::{Reserve, UserAssetBalance, TREASURY_SEED};
 
 pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
 
     let decimals = ctx.accounts.mint.decimals;
 
-    // pool
-    let pool = &mut ctx.accounts.pool;
-    let user_shares = if pool.total_deposits == 0 {
-         pool.total_deposits = amount;
-         pool.total_shares = amount;
+    // reserve
+    let reserve = &mut ctx.accounts.reserve;
+    let user_shares = if reserve.total_deposits == 0 {
+        reserve.total_deposits = amount;
+        reserve.total_shares = amount;
          amount
     } else {
-        let user_shares = pool.calculate_user_shares(amount);
-        pool.total_deposits += amount; 
-        pool.total_shares += user_shares;
+        let user_shares = reserve.calculate_user_shares(amount);
+        reserve.total_deposits += amount; 
+        reserve.total_shares += user_shares;
         user_shares
     };
     
@@ -37,7 +37,7 @@ pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
 
     let cpi_accounts = TransferChecked {
         from: ctx.accounts.user_token_account.to_account_info(),
-        to: ctx.accounts.pool_token_account.to_account_info(),
+        to: ctx.accounts.reserve_token_account.to_account_info(),
         mint: ctx.accounts.mint.to_account_info(),
         authority: ctx.accounts.signer.to_account_info()
     };
@@ -61,15 +61,21 @@ pub struct Deposit<'info> {
         seeds = [mint.key().as_ref()],
         bump,
     )]
-    pub pool: Account<'info, Pool>,
+    pub reserve: Account<'info, Reserve>,
 
     #[account(
         mut,
         seeds = [TREASURY_SEED, mint.key().as_ref()],
         bump
     )]
-    pub pool_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub reserve_token_account: InterfaceAccount<'info, TokenAccount>,
 
+    #[account(mut,
+        associated_token::mint = mint,
+        associated_token::authority = signer,
+        associated_token::token_program = token_program
+    )]
+    pub user_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(
         init_if_needed,
@@ -80,12 +86,6 @@ pub struct Deposit<'info> {
     )]
     pub user_asset_balance: Account<'info, UserAssetBalance>, 
 
-    #[account(mut,
-        associated_token::mint = mint,
-        associated_token::authority = signer,
-        associated_token::token_program = token_program
-    )]
-    pub user_token_account: InterfaceAccount<'info, TokenAccount>,
 
     pub associated_token: Program<'info, AssociatedToken>,
     pub token_program: Interface<'info, TokenInterface>,
