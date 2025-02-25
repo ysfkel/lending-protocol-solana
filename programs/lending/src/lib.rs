@@ -1,8 +1,11 @@
+pub mod error;
 pub mod state;
 pub mod instructions;
 pub mod seeds;
 
+
 use anchor_lang::prelude::*;
+pub use error::*;
 pub use state::*;
 pub use instructions::*;
 pub use seeds::*;
@@ -29,6 +32,11 @@ pub mod lending {
 
     pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         instructions::deposit(ctx, amount)?;
+        Ok(())
+    }
+
+    pub fn withdraw(ctx: Context<Withdraw> , amount: u64) -> Result<()> {
+        instructions::withdraw(ctx, amount)?;
         Ok(())
     }
 }

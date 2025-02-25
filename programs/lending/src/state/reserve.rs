@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::error::ErrorCode;
+
 #[account]
 #[derive(InitSpace)]
 pub struct Reserve {
@@ -18,13 +20,27 @@ pub struct Reserve {
 } 
 
 impl Reserve {
-    pub fn calculate_user_shares(&self, amount: u64) -> u64 {
+
+   pub fn calculate_shares(&self, amount: u64) -> Result<u64> {
+      let mut user_shares = ((amount as u128).checked_mul(self.total_shares as u128))
+      .ok_or(ErrorCode::OverflowError)?;
+
+     user_shares =  user_shares.checked_div(self.total_deposits as u128).ok_or(ErrorCode::OverflowError)?;
+     
+     Ok(u64::try_from(user_shares).map_err(|_|ErrorCode::IntegerConversionError)?)
+     
+   }
+    pub fn increase_deposits_and_shares(&mut self, amount: u64) -> Result<u64> {
 
         if self.total_deposits == 0 {
-            return 0;
+            self.total_deposits = amount;
+            self.total_shares = amount;
+            return Ok(amount);
+        } else {
+            let mut user_shares = self.calculate_shares(amount)?;
+            self.total_deposits += amount;
+            self.total_shares += user_shares;
+            Ok(user_shares)
         }
-        
-        let user_shares = (amount * self.total_shares) / self.total_deposits;
-        user_shares
     }
 }

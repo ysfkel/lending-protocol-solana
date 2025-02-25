@@ -3,28 +3,22 @@ use anchor_spl::{
     associated_token::AssociatedToken, 
     token_interface::{self,Mint, TokenAccount,TokenInterface, TransferChecked}};
 
-use crate::seeds::USER_ASSET_BALANCE_SEED;
-use crate::{Reserve, UserAssetBalance, TREASURY_SEED};
+use crate::{Reserve, UserAssetBalance,USER_ASSET_BALANCE_SEED, TREASURY_SEED, error::ErrorCode};
 
 pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+
+    require_gt!(amount, 0, ErrorCode::AmountZero);
 
     let decimals = ctx.accounts.mint.decimals;
 
     // reserve
     let reserve = &mut ctx.accounts.reserve;
-    let user_shares = if reserve.total_deposits == 0 {
-        reserve.total_deposits = amount;
-        reserve.total_shares = amount;
-         amount
-    } else {
-        let user_shares = reserve.calculate_user_shares(amount);
-        reserve.total_deposits += amount; 
-        reserve.total_shares += user_shares;
-        user_shares
-    };
+
+    let user_shares = reserve.increase_deposits_and_shares(amount)?;
     
     // update user_asset_balance 
     let user_asset_balance = &mut ctx.accounts.user_asset_balance;
+
     if user_asset_balance.mint == Pubkey::default() {
         user_asset_balance.owner = ctx.accounts.signer.key();
         user_asset_balance.mint = ctx.accounts.mint.key();
@@ -35,6 +29,7 @@ pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         user_asset_balance.deposited_shares +=user_shares;
     }
 
+    // transfer amount 
     let cpi_accounts = TransferChecked {
         from: ctx.accounts.user_token_account.to_account_info(),
         to: ctx.accounts.reserve_token_account.to_account_info(),
@@ -61,7 +56,7 @@ pub struct Deposit<'info> {
         seeds = [mint.key().as_ref()],
         bump,
     )]
-    pub reserve: Account<'info, Reserve>,
+    pub reserve: Box<Account<'info, Reserve>>,
 
     #[account(
         mut,
@@ -84,7 +79,7 @@ pub struct Deposit<'info> {
         seeds = [USER_ASSET_BALANCE_SEED, signer.key().as_ref(), mint.key().as_ref()],
         bump,
     )]
-    pub user_asset_balance: Account<'info, UserAssetBalance>, 
+    pub user_asset_balance: Box<Account<'info, UserAssetBalance>>, 
 
 
     pub associated_token: Program<'info, AssociatedToken>,
