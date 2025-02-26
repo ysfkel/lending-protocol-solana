@@ -3,7 +3,7 @@ use anchor_spl::{
     associated_token::AssociatedToken, 
     token_interface::{self,Mint, TokenAccount,TokenInterface, TransferChecked}};
 
-use crate::{Reserve, UserAssetBalance,USER_ASSET_BALANCE_SEED, TREASURY_SEED, error::ErrorCode};
+use crate::{Reserve, DepositAccount,DEPOSIT_ACCOUNT_SEED, TREASURY_SEED, error::ErrorCode};
 
 pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
 
@@ -17,16 +17,16 @@ pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
     let user_shares = reserve.increase_deposits_and_shares(amount)?;
     
     // update user_asset_balance 
-    let user_asset_balance = &mut ctx.accounts.user_asset_balance;
+    let deposit_account = &mut ctx.accounts.deposit_account;
 
-    if user_asset_balance.mint == Pubkey::default() {
-        user_asset_balance.owner = ctx.accounts.signer.key();
-        user_asset_balance.mint = ctx.accounts.mint.key();
-        user_asset_balance.deposited = amount;
-        user_asset_balance.deposited_shares = user_shares;  
+    if deposit_account.mint == Pubkey::default() {
+        deposit_account.owner = ctx.accounts.signer.key();
+        deposit_account.mint = ctx.accounts.mint.key();
+        deposit_account.amount = amount;
+        deposit_account.shares = user_shares;  
     } else  {
-        user_asset_balance.deposited +=amount ;
-        user_asset_balance.deposited_shares +=user_shares;
+        deposit_account.amount +=amount ;
+        deposit_account.shares +=user_shares;
     }
 
     // transfer amount 
@@ -74,12 +74,12 @@ pub struct Deposit<'info> {
 
     #[account(
         init_if_needed,
-        space = 8 + UserAssetBalance::INIT_SPACE,
+        space = 8 + DepositAccount::INIT_SPACE,
         payer = signer, 
-        seeds = [USER_ASSET_BALANCE_SEED, signer.key().as_ref(), mint.key().as_ref()],
+        seeds = [DEPOSIT_ACCOUNT_SEED, signer.key().as_ref(), mint.key().as_ref()],
         bump,
     )]
-    pub user_asset_balance: Box<Account<'info, UserAssetBalance>>, 
+    pub deposit_account: Box<Account<'info, DepositAccount>>, 
 
 
     pub associated_token: Program<'info, AssociatedToken>,

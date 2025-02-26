@@ -3,7 +3,6 @@ pub mod state;
 pub mod instructions;
 pub mod seeds;
 
-
 use anchor_lang::prelude::*;
 pub use error::*;
 pub use state::*;

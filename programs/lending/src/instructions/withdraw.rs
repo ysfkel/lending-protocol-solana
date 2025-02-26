@@ -3,7 +3,7 @@ use anchor_spl::{
     associated_token::AssociatedToken, token_interface::{self,
         TransferChecked,
      Mint, TokenAccount, TokenInterface}};
-use crate::{TREASURY_SEED,USER_ASSET_BALANCE_SEED, Reserve,UserAssetBalance, error::ErrorCode};
+use crate::{TREASURY_SEED,DEPOSIT_ACCOUNT_SEED, Reserve,UserAssetBalance, error::ErrorCode};
 
 
 pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
@@ -83,7 +83,7 @@ pub struct Withdraw<'info> {
 
     #[account(
         mut,
-        seeds = [USER_ASSET_BALANCE_SEED, signer.key().as_ref(), mint.key().as_ref()],
+        seeds = [DEPOSIT_ACCOUNT_SEED, signer.key().as_ref(), mint.key().as_ref()],
         bump
     )]
     pub user_asset_balance: Box<Account<'info, UserAssetBalance>>,

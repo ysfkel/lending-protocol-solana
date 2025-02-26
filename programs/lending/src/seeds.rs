@@ -1,3 +1,3 @@
 
-pub const USER_ASSET_BALANCE_SEED :&[u8] = b"uer_asset_balance";
-pub const TREASURY_SEED: &[u8] = b"treasury";
+pub const DEPOSIT_ACCOUNT_SEED :&[u8] = b"DEPOSIT_ACCOUNT_SEED";
+pub const TREASURY_SEED: &[u8] = b"TREASURY_SEED";
